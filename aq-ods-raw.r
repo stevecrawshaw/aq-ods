@@ -24,9 +24,11 @@ asr_la_list <- list(
     "cs_path" = "data/SGC 2024 ASR Tables_NO2 Montoring Results.xlsx"
   )
 )
+# testing
+# dt_path <- asr_la_list |> 
+#   pluck("bristol") |> 
+#   pluck("dt_path")
 
-asr_la_list |> 
-  map(~pluck(.x, "dt_path"))
 
 # Diffusion Tube Tables -----
 
@@ -43,32 +45,30 @@ get_raw_dt_la_lst <- function(la_list) {
   read_xlsx(dt_path,
             sheet = "STEP 2 - Diffusion Tube Inputs",
             skip = 11) |> 
-  clean_names() |>
-  select(-starts_with("x")) |>
+  clean_names(replace = c("\u00b5" = "u")) |>
+  select(-matches("x\\d")) |>
   select(diffusion_tube_id:requires_annualisation) |>
-  filter(!is.na(diffusion_tube_id)) |> 
-  glimpse()
+  filter(!is.na(diffusion_tube_id)) 
 
 dt_table_a2_tbl <- 
   read_xlsx(dt_path,
             sheet = "Table A.2",
             skip = 8) |> 
-  clean_names() |>
-  select(-starts_with("x")) |>
-  filter(!is.na(diffusion_tube_id)) |> 
-  glimpse()
+  clean_names(replace = c("\u00b5" = "u")) |>
+  select(-matches("x\\d")) |>
+  filter(!is.na(diffusion_tube_id)) 
 
 
 dt_a4_names_parameters <- read_xlsx(dt_path,
                                  sheet = "Table A.4",
                                  range = "C9:H9") |> 
-  clean_names() |>
+  clean_names(replace = c("\u00b5" = "u")) |>
   names()
 
 dt_a4_names_years <- read_xlsx(dt_path,
                             sheet = "Table A.4",
                             range = "I10:M10") |> 
-  clean_names() |>
+  clean_names(replace = c("\u00b5" = "u")) |>
   names()
 
 (dt_a4_names <- c(dt_a4_names_parameters, dt_a4_names_years))
@@ -79,13 +79,21 @@ dt_table_a4_tbl <-
             skip = 10) |> 
   select(1:11) |> 
   set_names(dt_a4_names) |>
-  filter(!is.na(diffusion_tube_id)) |> 
-  glimpse()
+  filter(!is.na(diffusion_tube_id)) 
+
+dt_table_dtdes_tbl <- read_xlsx(dt_path,
+                      sheet = "DTDES Inputs",
+                      skip = 1) |> 
+  clean_names(replace = c("\u00b5" = "u")) |>
+  select(-matches("x\\d")) |>
+  filter(!is.na(unique_id))
+
 
 out_list <- list(
   "dt_step_2_inputs_tbl" = dt_step_2_inputs_tbl,
   "dt_table_a2_tbl" = dt_table_a2_tbl,
   "dt_table_a4_tbl" = dt_table_a4_tbl,
+  "dt_table_dtdes_tbl" = dt_table_dtdes_tbl,
   "la_name" = la_name,
   "ladcd" = ladcd
 )
@@ -112,22 +120,20 @@ get_raw_cs_la_lst <- function(la_list){
 cs_table_a1 <- read_xlsx(cs_path,
                          sheet = "Table A.1",
                          skip = 4) |> 
-  clean_names() |> 
-  glimpse()
+  clean_names(replace = c("\u00b5" = "u"))
 
 # annual mean concentrations NO2
 cs_table_a3 <- read_xlsx(cs_path,
                          sheet = "Table A.3",
                          skip = 4) |>
-  clean_names() |> 
-  glimpse()
+  clean_names(replace = c("\u00b5" = "u")) 
 
 # 1 hour means NO2
 
 cs_table_a5 <- read_xlsx(cs_path,
                          sheet = "Table A.5",
                          skip = 4) |>
-  clean_names() |> 
+  clean_names(replace = c("\u00b5" = "u")) |> 
   glimpse()
   
 # PM10 annual mean concentrations
@@ -136,7 +142,7 @@ cs_table_a5 <- read_xlsx(cs_path,
 cs_table_a6 <- read_xlsx(cs_path,
                          sheet = "Table A.6",
                          skip = 4) |>
-  clean_names() |> 
+  clean_names(replace = c("\u00b5" = "u")) |> 
   glimpse()
 
 # PM10 24 hour means
@@ -145,7 +151,7 @@ cs_table_a6 <- read_xlsx(cs_path,
 cs_table_a7 <- read_xlsx(cs_path,
                          sheet = "Table A.7",
                          skip = 4) |>
-  clean_names() |> 
+  clean_names(replace = c("\u00b5" = "u")) |> 
   glimpse()
 
 # PM2.5 annual mean concentrations
@@ -154,7 +160,7 @@ cs_table_a7 <- read_xlsx(cs_path,
 cs_table_a8 <- read_xlsx(cs_path,
                          sheet = "Table A.8",
                          skip = 4) |>
-  clean_names() |> 
+  clean_names(replace = c("\u00b5" = "u")) |> 
   glimpse()
 
 out_list <- list(
