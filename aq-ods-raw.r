@@ -4,26 +4,7 @@
 # 
 pacman::p_load(tidyverse, janitor, glue, readxl, jsonlite)
 
-asr_la_list <- list(
-  "bristol"  = list(
-    "la_name" = "Bristol, City of",
-    "ladcd" = "E06000023",
-    "dt_path" = "data/Bristol DTTool_Entriesv4.0.xlsx",
-    "cs_path" = "data/Bristol_City_Council_2024_ASR_Tables.xlsx"
-  ),
-  "banes" = list(
-    "la_name" = "Bath and North East Somerset",
-    "ladcd" = "E06000022",
-    "dt_path" = "data/Table A-4 2024 ASR.xlsx",
-    "cs_path" = "data/Table A-4 2024 ASR.xlsx"
-  ),
-  "south_glos" = list(
-    "la_name" = "South Gloucestershire",
-    "ladcd" = "E06000025",
-    "dt_path" = "data/SGC 2024 ASR Tables_NO2 Montoring Results.xlsx",
-    "cs_path" = "data/SGC 2024 ASR Tables_NO2 Montoring Results.xlsx"
-  )
-)
+source("aq-processing-functions.r")
 # testing
 # dt_path <- asr_la_list |> 
 #   pluck("bristol") |> 

@@ -6,80 +6,7 @@ raw_cs_lst <- read_rds("data/bristol_raw_cs_lst.rds")
 list2env(raw_dt_lst, envir = .GlobalEnv)
 list2env(raw_cs_lst, envir = .GlobalEnv)
 
-# Processing functions ----
-# 
-
-extract_site_id <- function(tbl, col) {
-  # utility function for extracting site IDs from 
-  # the range of different SIte ID's in use  UAs
-  col_name <- rlang::ensym(col)
-  
-  tbl  |> 
-    dplyr::mutate(!!col_name := stringr::str_extract(
-      !!col_name,
-      pattern = ".*?\\d+(?=[_a-zA-Z]|$)"
-    ))
-}
-
-distance_correct <- function(dt_table_dtdes_tbl,
-                             year = 2023){
-# create the subset of DT data which is distance corrected
-# i.e. where the tube position does not reflect exposure
-# but concentration is adjusted to represent that exposure
-    dt_table_dtdes_tbl |> 
-    extract_site_id(site_id) |>
-  filter(!is.na(distance_corrected_annual_mean_ug_m3)) |>
-  transmute(site_id,
-       annual_mean_no2_distance_corrected = distance_corrected_annual_mean_ug_m3,
-       year = year)
-  
-}
-
-extract_stat_bracket <- function(stat_bracket,
-                                 s_or_b = "stat") {
-  # separates out the bracketed value from the stat value
-  # from ASR tables
-  if(!is.na(stat_bracket)){
-    if (str_detect(stat_bracket, "\\(|\\)")) {
-    out <- str_match_all(
-      stat_bracket,
-      "\\d+(?:\\.\\d+)?(?=\\s*\\()|(?<=\\()\\d+(?:\\.\\d+)?(?=\\))"
-      )
-
-    if (s_or_b == "stat") {
-      return(
-        as.double(out[[1]][1])
-      )
-    } else if (s_or_b == "bracket") {
-      return(
-        as.double(out[[1]][2])
-        )
-    }
-  } else {
-    return(stat_bracket |> as.double())
-  }
-  } else {
-    return (NA_real_)
-  }
-}
-
-
-process_year_concs <- function(cs_table){
-  cs_table |> 
-    mutate(
-    across(
-      starts_with("x2"),
-      ~map_dbl(.x,
-               ~map_dbl(.x,
-                        ~extract_stat_bracket(.x,
-                                              "stat")))),
-    site_id = as.character(site_id)) |> 
-  select(starts_with("x2"), site_id) |> 
-  pivot_longer(cols = starts_with("x2"),
-               names_to = "year",
-               values_to = "concentration") |> 
-  mutate(year = str_remove(year, "x") |> as.integer())
-}
+source("aq-processing-functions.r")
 
 # Extract Monitoring Site (DIM) Data -------------------
 
@@ -87,7 +14,13 @@ process_year_concs <- function(cs_table){
 # 
 n_tubes_tbl <- dt_table_dtdes_tbl |> 
   extract_site_id(site_id) |> 
-  select(site_id, single_duplicate_triplicate)
+  # select(site_id, single_duplicate_triplicate) |> 
+  transmute(site_id,
+            tube_count = case_when(
+    single_duplicate_triplicate == "Single" ~ 1,
+    single_duplicate_triplicate == "Duplicate" ~ 2,
+    single_duplicate_triplicate == "Triplicate" ~ 3,
+    TRUE ~ NA_integer_)) 
 
 dt_sites_tbl <- dt_table_a2_tbl |> 
   mutate(
@@ -97,7 +30,7 @@ dt_sites_tbl <- dt_table_a2_tbl |>
                           distance_to_relevant_exposure_m,
                           distance_to_kerb_of_nearest_road_m,
                           height_m),
-                .fns = as.integer),
+                .fns = as.numeric),
   monitoring_technique = "Diffusion tube") |> 
   extract_site_id(site_id) |>
   left_join(n_tubes_tbl, by = "site_id") |>
@@ -113,12 +46,16 @@ cs_sites_tbl <- cs_table_a1 |>
                           distance_to_relevant_exposure_m,
                           distance_to_kerb_of_nearest_road_m,
                           height_m),
-                .fns = as.integer)) |>
+                .fns = as.numeric),
+         monitoring_technique = if_else(
+           monitoring_technique == "Chemiluminescent",
+           "Chemiluminescent (NOx)",
+           monitoring_technique)) |>
   glimpse()
 
 # Join the continuous and diffusion tube data ----
 
-all_sites_tbl <- dt_sites_tbl |> 
+bristol_all_sites_tbl <- dt_sites_tbl |> 
   bind_rows(cs_sites_tbl) |> 
   mutate(
     # catch instances where nothing entered in colocation column
@@ -130,6 +67,8 @@ all_sites_tbl <- dt_sites_tbl |>
     tube_co_located_with_a_continuous_analyser =
       str_detect(tube_co_located_with_a_continuous_analyser,
                          "Yes|yes|y"),
+    aqma_bool = str_detect(in_aqma_which_aqma, "Yes|yes|y"),
+    aqma = if_else(aqma_bool, "Bristol", ""),
     la_name = la_name,
     ladcd = ladcd) |> 
   # geometry for export as lat long
@@ -142,7 +81,7 @@ all_sites_tbl <- dt_sites_tbl |>
 
 # Write the consolidated data for MONITORING SITES ----
 
-all_sites_tbl |>
+bristol_all_sites_tbl |>
   st_write("data/bristol_aq_sites.geojson",
            driver = "GeoJSON", delete_dsn = TRUE)
 
@@ -218,6 +157,18 @@ cs_list <- list(
 cs_tbl <- cs_list |> 
   reduce(left_join, by = c("site_id", "year"))
 
-bind_rows(cs_tbl, dt_tbl) |>
-  mutate(ladcd = ladcd) |> 
+bristol_aq_concs_tbl <- bind_rows(cs_tbl, dt_tbl) |>
+  filter(!is.na(annual_mean_no2) |
+         !is.na(annual_mean_no2_distance_corrected) |
+         !is.na(annual_exc_no2) |
+         !is.na(annual_mean_pm10) |
+         !is.na(daily_exc_pm10) |
+         !is.na(annual_mean_pm25)) |>
+  mutate(ladcd = ladcd) 
+
+bristol_aq_concs_tbl |> 
   write_csv("data/bristol_aq_concs.csv", na = "")
+
+
+write_rds(list("bristol_aq_concs_tbl" = bristol_aq_concs_tbl, "bristol_all_sites_tbl" = bristol_all_sites_tbl),
+          "data/bristol_aq_data.rds")
