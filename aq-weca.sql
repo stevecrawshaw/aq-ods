@@ -4,12 +4,15 @@
 -- This data is used to inform presentation for air quality in WECA
 
 duckdb
+
+
 INSTALL SPATIAL;
 LOAD SPATIAL;
 
 -- Connect to MCA's Postgres database VPN ON!!!!!
 -- credentials are stored in a secret manager
 -- We retrieve the background grids and transform to enable joining and mapping
+
 ATTACH '' AS weca_postgres (TYPE POSTGRES, SECRET weca_postgres);
 
 ATTACH 'data/aq.duckdb' AS aq;
