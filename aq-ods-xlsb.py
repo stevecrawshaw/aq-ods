@@ -5,7 +5,9 @@ from aspose.cells import Workbook
 
 # %%
 data_dir = Path("data")
-xlsb_files = list(data_dir.glob("*.xlsb"))
+xlsb_files = list(data_dir.glob("*NES*.xlsb"))
+# %%
+print(xlsb_files)
 
 
 # %%
@@ -23,3 +25,5 @@ def convert_xlsb_to_xlsx(file_path):
 
 for xlsb_file in xlsb_files:
     convert_xlsb_to_xlsx(xlsb_file)
+
+# %%

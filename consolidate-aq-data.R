@@ -5,12 +5,18 @@ b <- read_rds("data/bristol_aq_data.rds")
 # read in the South Glos data
 s  <- read_rds("data/s_glos_aq_data.rds")
 
-list(b, s) |> walk(~list2env(.x, envir = .GlobalEnv))
+ba <- read_rds("data/banes_aq_data.rds")
 
-all_sites_tbl <- bind_rows(bristol_all_sites_tbl, s_glos_all_sites_tbl) |> 
+list(b, s, ba) |> walk(~list2env(.x, envir = .GlobalEnv))
+
+all_sites_tbl <- bind_rows(bristol_all_sites_tbl,
+                           s_glos_all_sites_tbl,
+                           banes_all_sites_tbl) |>
   glimpse()
 
-all_concs_tbl <- bind_rows(bristol_aq_concs_tbl, s_glos_aq_concs_tbl) |> 
+all_concs_tbl <- bind_rows(bristol_aq_concs_tbl,
+                           s_glos_aq_concs_tbl,
+                           banes_aq_concs_tbl) |> 
   glimpse()
 
 all_sites_tbl |> 

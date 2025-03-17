@@ -10,8 +10,8 @@ asr_la_list <- list(
   "banes" = list(
     "la_name" = "Bath and North East Somerset",
     "ladcd" = "E06000022",
-    "dt_path" = "data/Table A-4 2024 ASR.xlsx",
-    "cs_path" = "data/Table A-4 2024 ASR.xlsx"
+    "dt_path" = "data/Diffusion_Tube_Data_Processing_Tool_v4.0_2023 BANES data.xlsx",
+    "cs_path" = "data/ASR_Table_B&NES_2024.xlsx"
   ),
   "south_glos" = list(
     "la_name" = "South Gloucestershire",

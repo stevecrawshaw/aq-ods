@@ -1,7 +1,7 @@
 pacman::p_load(tidyverse, sf, janitor, glue)
 
-raw_dt_lst <- read_rds("data/bristol_raw_dt_lst.rds")
-raw_cs_lst <- read_rds("data/bristol_raw_cs_lst.rds")
+raw_dt_lst <- read_rds("data/banes_raw_dt_lst.rds")
+raw_cs_lst <- read_rds("data/banes_raw_cs_lst.rds")
 
 list2env(raw_dt_lst, envir = .GlobalEnv)
 list2env(raw_cs_lst, envir = .GlobalEnv)
@@ -55,7 +55,7 @@ cs_sites_tbl <- cs_table_a1 |>
 
 # Join the continuous and diffusion tube data ----
 
-bristol_all_sites_tbl <- dt_sites_tbl |> 
+banes_all_sites_tbl <- dt_sites_tbl |> 
   bind_rows(cs_sites_tbl) |> 
   mutate(
     # catch instances where nothing entered in colocation column
@@ -68,7 +68,10 @@ bristol_all_sites_tbl <- dt_sites_tbl |>
       str_detect(tube_co_located_with_a_continuous_analyser,
                          "Yes|yes|y"),
     aqma_bool = str_detect(in_aqma_which_aqma, "Yes|yes|y"),
-    aqma = if_else(aqma_bool, "Bristol", ""),
+    aqma = if_else(aqma_bool,
+                   str_extract(in_aqma_which_aqma, "\\(.+\\)") |> 
+                   str_remove_all("\\(|\\)"),
+                   ""),
     la_name = la_name,
     ladcd = ladcd) |> 
   # geometry for export as lat long
@@ -81,8 +84,8 @@ bristol_all_sites_tbl <- dt_sites_tbl |>
 
 # Write the consolidated data for MONITORING SITES ----
 
-bristol_all_sites_tbl |>
-  st_write("data/bristol_aq_sites.geojson",
+banes_all_sites_tbl |>
+  st_write("data/banes_aq_sites.geojson",
            driver = "GeoJSON", delete_dsn = TRUE)
 
 
@@ -94,6 +97,8 @@ dt_concs_am <- dt_table_a4_tbl |>
   extract_site_id(diffusion_tube_id) |>
   rename(site_id = diffusion_tube_id) |>
   select(site_id, starts_with("x2")) |>
+  mutate(across(.cols = starts_with("x"),
+                .fns = as.double)) |>
   pivot_longer(cols = starts_with("x2"),
                 names_to = "year",
                 values_to = "annual_mean_no2") |>
@@ -157,7 +162,7 @@ cs_list <- list(
 cs_tbl <- cs_list |> 
   reduce(left_join, by = c("site_id", "year"))
 
-bristol_aq_concs_tbl <- bind_rows(cs_tbl, dt_tbl) |>
+banes_aq_concs_tbl <- bind_rows(cs_tbl, dt_tbl) |>
   filter(!is.na(annual_mean_no2) |
          !is.na(annual_mean_no2_distance_corrected) |
          !is.na(annual_exc_no2) |
@@ -166,9 +171,9 @@ bristol_aq_concs_tbl <- bind_rows(cs_tbl, dt_tbl) |>
          !is.na(annual_mean_pm25)) |>
   mutate(ladcd = ladcd) 
 
-bristol_aq_concs_tbl |> 
-  write_csv("data/bristol_aq_concs.csv", na = "")
+banes_aq_concs_tbl |> 
+  write_csv("data/banes_aq_concs.csv", na = "")
 
 
-write_rds(list("bristol_aq_concs_tbl" = bristol_aq_concs_tbl, "bristol_all_sites_tbl" = bristol_all_sites_tbl),
-          "data/bristol_aq_data.rds")
+write_rds(list("banes_aq_concs_tbl" = banes_aq_concs_tbl, "banes_all_sites_tbl" = banes_all_sites_tbl),
+          "data/banes_aq_data.rds")

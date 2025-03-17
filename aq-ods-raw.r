@@ -83,6 +83,9 @@ return(out_list)
   
 }
 
+banes_raw_dt_lst <- pluck(asr_la_list, "banes") |> 
+  get_raw_dt_la_lst()
+
 # test the function
 bristol_raw_dt_lst <- pluck(asr_la_list, "bristol") |> 
   get_raw_dt_la_lst()
@@ -161,9 +164,16 @@ return(out_list)
 bristol_raw_cs_lst <- pluck(asr_la_list, "bristol") |> 
   get_raw_cs_la_lst()
 
-  bristol_raw_cs_lst |> jsonlite::write_json("data/bristol_raw_cs_lst.json", simplifyDataFrame = FALSE)
+banes_raw_cs_lst <- pluck(asr_la_list, "banes") |>
+  get_raw_cs_la_lst()
+
+
+bristol_raw_cs_lst |> jsonlite::write_json("data/bristol_raw_cs_lst.json", simplifyDataFrame = FALSE)
 
 write_rds(bristol_raw_dt_lst, "data/bristol_raw_dt_lst.rds")
 write_rds(bristol_raw_cs_lst, "data/bristol_raw_cs_lst.rds")
-  
+
+write_rds(banes_raw_dt_lst, "data/banes_raw_dt_lst.rds")
+write_rds(banes_raw_cs_lst, "data/banes_raw_cs_lst.rds")
+
   
