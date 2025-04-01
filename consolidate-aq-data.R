@@ -12,7 +12,7 @@ list(b, s, ba) |> walk(~list2env(.x, envir = .GlobalEnv))
 all_sites_tbl <- bind_rows(bristol_all_sites_tbl,
                            s_glos_all_sites_tbl,
                            banes_all_sites_tbl) |>
-  glimpse()
+    glimpse()
 
 all_concs_tbl <- bind_rows(bristol_aq_concs_tbl,
                            s_glos_aq_concs_tbl,

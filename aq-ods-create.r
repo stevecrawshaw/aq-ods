@@ -63,6 +63,9 @@ banes_all_sites_tbl <- dt_sites_tbl |>
       if_else(is.na(tube_co_located_with_a_continuous_analyser) & monitoring_technique == "Diffusion tube",
               "No",
               tube_co_located_with_a_continuous_analyser),
+    # These lines to account for BANES site where pumped BTX not used
+    pollutants_monitored = if_else(site_id == "CM8", "NO2, PM10", pollutants_monitored),
+    monitoring_technique = if_else(site_id == "CM8", "Chemiluminescent BAM1020", monitoring_technique),
     # convert to boolean
     tube_co_located_with_a_continuous_analyser =
       str_detect(tube_co_located_with_a_continuous_analyser,
@@ -74,6 +77,9 @@ banes_all_sites_tbl <- dt_sites_tbl |>
                    ""),
     la_name = la_name,
     ladcd = ladcd) |> 
+  mutate(monitor_type = if_else(str_detect(monitoring_technique, "Diffusion"),
+                                "Diffusion tube",
+                                "Continuous")) |> 
   # geometry for export as lat long
   # geojson import creates the geoshape directly
   st_as_sf(coords = c("x_os_grid_ref_easting",
