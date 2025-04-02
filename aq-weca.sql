@@ -19,6 +19,8 @@ ATTACH '' AS weca_postgres (TYPE POSTGRES, SECRET weca_postgres);
 ATTACH 'data/aq.duckdb' AS aq;
 USE aq;
 
+SHOW TABLES;
+
 SELECT table_name FROM information_schema.columns
 GROUP BY table_name, table_catalog, table_schema
 HAVING table_catalog = 'weca_postgres' AND table_schema = 'bcc';
@@ -31,21 +33,23 @@ SELECT * EXCLUDE(shape),
 CREATE OR REPLACE TABLE aq.banes_caz AS
 SELECT 
      ST_GeomFromWKB(weca_postgres.banes.caz.shape).ST_Transform('EPSG:27700', 'EPSG:4326').ST_FlipCoordinates() AS geom
- FROM weca_postgres.banes.caz;
+FROM weca_postgres.banes.caz;
 
-CREATE OR REPLACE TABLE aq.bcc_aqma AS
-SELECT geom FROM ST_read("https://maps2.bristol.gov.uk/server2/rest/services/ext/ll_environment_and_planning/MapServer/10/query?outFields=*&where=1%3D1&f=geojson");
+COPY(
+SELECT *, 'Bath and North East Somerset' ladnm, 'E06000022' ladcd, 'C' caz_class FROM aq.banes_caz
+UNION BY NAME
+SELECT geom, 'Bristol, City of' ladnm, 'E06000023' ladcd, 'D' caz_class FROM aq.bcc_caz)
+TO 'data/weca_caz.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
 
--- BANES AQMA from downloaded shapefile https://uk-air.defra.gov.uk/aqma/maps/
-CREATE OR REPLACE TABLE aq.banes_aqma AS
-SELECT * REPLACE(ST_Transform(geom, 'EPSG:27700', 'EPSG:4326').ST_FlipCoordinates() AS geom)
+CREATE OR REPLACE TABLE aq.weca_aqmas AS
+SELECT * REPLACE(ST_Transform(geom, 'EPSG:27700', 'EPSG:4326').ST_FlipCoordinates().ST_MakeValid() AS geom)
      FROM ST_read("data/AQMA_ShapeFile/All_pollutants.shp")
-     WHERE regexp_matches(local_auth, '^Bath|bath');
+     WHERE la_ons_nam IN  ('South Gloucestershire', 'Bath and North East Somerset', 'Bristol, City of');
 
-COPY (SELECT * FROM aq.banes_aqma) TO 'data/banes_aqma.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
-COPY (SELECT * FROM aq.bcc_aqma) TO 'data/bcc_aqma.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
+-- Export to GeoJSON for AQMA
 COPY (SELECT * FROM aq.banes_caz) TO 'data/banes_caz.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
 COPY (SELECT * FROM aq.bcc_caz) TO 'data/bcc_caz.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
+COPY (SELECT * FROM aq.weca_aqmas) TO 'data/weca_aqmas.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
 
 
 -- background grids for the whole of southern england

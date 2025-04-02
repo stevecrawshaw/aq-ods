@@ -1,0 +1,176 @@
+---
+title: "Air Quality Training"
+subtitle: "West of England Mayoral Combined Authority"
+author: "Steve Crawshaw"
+institute: "Analysis Team"
+embed-resources: true
+preview-links: true
+format:
+  revealjs:
+    theme: 
+    - default
+    - clean.scss
+---
+
+
+## Purpose {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Improving understanding of air quality in MCA and UAs
+- Enabling compliance with air quality legislation
+- Protecting public health
+
+## Content {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Air Quality: Introduction
+- Health and Environmental Impacts
+- Regulatory Framework
+- Air Quality Monitoring and Management in Transport Schemes
+- Risk Assessment and Mitigation
+
+##  Air Quality: Introduction {background-image="plots/weca_ppt_image_sized_3.png"}
+- Pollutants
+- Sources
+- History
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](plots/excel_anaes_1.png)
+:::
+
+::: {.column width="50%"}
+![](plots/excel_covid.png)
+:::
+
+::::
+
+
+
+## Excel `r emo::ji("sad")` {background-image="plots/weca_ppt_image_sized_3.png"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](plots/excel_brod.png)
+:::
+
+::: {.column width="50%"}
+![](plots/excel_reinhard_rogoff.png)
+:::
+
+::::
+
+## Code - first (Python & R) `r emo::ji("love")` {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Separate data and code
+- Code is reviewable
+- Style guides for good practice
+- Reusable code, modular and functional programming
+- Machine learning, prediction, forecasting
+- Integrated reporting functionality
+- Pre - requisite for RAP
+
+## Analysis task {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Report on last month's domestic EPC's for the West of England with a focus on heat pumps. Compare with previous year and show data in charts, maps and tables.
+
+## Typical non code workflow {background-image="plots/weca_ppt_image_sized_3.png"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+- Login to [EPC web site](https://epc.opendatacommunities.org/domestic/search)
+- Download multiple files as zip (or one 4.5GB file)
+- Assemble in excel
+- Wrangle, analyse, chart
+- Extract table data
+:::
+
+::: {.column width="50%"}
+- Join postcode and location data
+- Map in QGIS
+- Export map from QGIS as png
+- Insert data analysis products in Word report
+- Submit report
+:::
+
+::::
+
+[Expanded example](https://hkarlsen.rbind.io/blog/data-workflow/)
+
+## Analysis Feedback {background-image="plots/weca_ppt_image_sized_3.png"}
+
+*"Great, but can you add ... *
+
+*And can you do this every month.."*
+
+## Code - first workflow {background-image="plots/weca_ppt_image_sized_3.png"}
+
+
+- Write and test **functions** to:
+  - Download EPC data given dates, LA and endpoint from API
+  - Download location data for postcodes in EPC data
+  - Clean, wrangle, join data
+  - Chart, map, tabulate data
+
+- Call **functions** in literate programming environment combining code, visualisations and text
+
+## Demo {background-image="plots/weca_ppt_image_sized_3.png"}
+
+## Benefits {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Data separate from code (API)
+- Lower risk of tool - dependent errors
+- Reusable code - just change function parameters
+- Version control and collaboration with Git(Hub)
+- Literate programming data science environment (Quarto)
+  - Supports Python and R
+  - Attractive, integrated interactive reporting
+  - Dashboards, web apps, presentations
+  - Publish on [quarto.pub](https://stevecrawshaw.quarto.pub/)
+- Open source
+
+## Code first: {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- "Code" is scary `r emo::ji("walking dead")` (but LLM's help a lot)
+- Python and \\ or R?
+- Investment & recruitment
+- Culture
+- Infrastructure
+  - ICT support
+  - Azure
+  - Data lake \\ warehouse \\ catalog
+
+## Towards Reproducible Analytics Pipelines {background-image="plots/weca_ppt_image_sized_3.png"}
+
+- Code first
+- Git and Github
+- Environment management
+- Pipeline tools (targets, ploomber)
+- Docker
+
+## RAP Guidance {background-image="plots/weca_ppt_image_sized_3.png"}
+
+:::: {.columns}
+
+::: {.column width="40%"}
+- [DESNZ](https://www.gov.uk/government/publications/desnz-standards-for-official-statistics/analysis-function-reproducible-analytical-pipelines-rap-strategy-2023-desnz-implementation-plan)
+- [UK Gov Data Science](https://ukgovdatascience.github.io/rap_companion/)
+- [OSR](https://osr.statisticsauthority.gov.uk/publication/reproducible-analytical-pipelines-overcoming-barriers-to-adoption/)
+- [Building RAPS with R](https://raps-with-r.dev/)
+:::
+
+::: {.column width="60%"}
+![](plots/raps_r.png)
+:::
+
+::::
+
+
+
+## [Civil Service RAP Strategy](https://analysisfunction.civilservice.gov.uk/policy-store/reproducible-analytical-pipelines-strategy/#short-summary-of-this-publication)  {background-image="plots/weca_ppt_image_sized_3.png"}
+
+**"Our analysis must be straightforward to reproduce. Reproducible analysis is more efficient, open, and easier to quality assure and re-use.**
+
+The most effective way to make analysis reproducible is to build analysis in code using best practice from software engineering. RAPs enable us to deliver **high quality, trustworthy research and analysis** using good programming practices. We meet user needs by writing efficient and re-usable code for analysis."
+
