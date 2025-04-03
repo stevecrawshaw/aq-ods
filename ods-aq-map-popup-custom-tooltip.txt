@@ -1,0 +1,74 @@
+
+<style>
+.odswidget-map-tooltip__scroll-control {
+    display: none;
+    }
+.odswidget-map-tooltip__record {
+    overflow: visible !important; /* Allow content to overflow/expand */
+    height: auto !important; /* Allow the height to adjust to content */
+    max-height: none !important; /* Override any max-height */
+}
+    
+.leaflet-popup-content-wrapper {
+  width: auto !important; /* Let the content define the width */
+  max-width: none !important; /* Remove any max-width restrictions */
+  height: auto !important; /* Let the content define the height */
+}
+    
+  .leaflet-popup-content {
+
+  height: auto !important; /* Let the content define the height */
+}  
+    
+    
+.highcharts-container {
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Consider these if the chart is still overflowing */
+
+.odswidget-map-tooltip {
+  width: auto !important;
+  height: auto !important;
+}
+
+.odswidget-charts { /* Or a more specific selector if needed */
+    min-height: 410px; /* Try a value close to your usual chart height */
+    /* Keep your other overrides like width/height auto */
+    width: auto !important; [cite: 11, 153]
+    height: auto !important; [cite: 11, 153]
+}
+
+/* You might also need to ensure parent containers allow for this */
+.odswidget-map-tooltip__record {
+    /* Ensure existing overrides are present */
+    overflow: visible !important; [cite: 1, 148]
+    height: auto !important; [cite: 2, 148]
+    max-height: none !important; [cite: 3, 148]
+    /* You could potentially add min-height here too if needed */
+}
+    
+    
+    
+.highcharts-root {
+  overflow: visible !important; 
+}
+</style>
+<p>
+    Annual mean NO<sub>2</sub> for site {{record.fields.site_id}} in
+    {{record.fields.la_name}}
+</p>
+<ods-dataset-context airqualitymeasurements-dataset="air-quality-measurements" airqualitymeasurements-parameters="{'disjunctive.la_name':true,'disjunctive.monitoring_technique':true,'refine.la_name':record.fields.la_name,'refine.site_id':record.fields.site_id}" context="airqualitymeasurements">
+     <ods-chart align-month="true" scientific-display="true" single-y-axis="true" single-y-axis-label="NO2 ugm-3">
+        <ods-chart-query context="ctx" field-x="year" maxpoints="0" timescale="year">
+            <ods-chart-serie chart-type="line" color="#354753" expression-y="annual_mean_no2" scientific-display="true">
+            </ods-chart-serie>
+        </ods-chart-query>
+        <ods-chart-query context="ctx" field-x="year" maxpoints="0" timescale="year">
+             <ods-chart-serie chart-type="line" color="red" expression-y="40" function-y="CONSTANT" label-y="Compliance Objective" scientific-display="true">
+                            </ods-chart-serie>
+         </ods-chart-query>
+    </ods-chart>
+
+</ods-dataset-context>
