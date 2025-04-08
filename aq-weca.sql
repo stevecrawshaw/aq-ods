@@ -5,8 +5,7 @@
 
 duckdb
 
-
-INSTALL SPATIAL;
+-- INSTALL SPATIAL;
 LOAD SPATIAL;
 LOAD HTTPFS;
 
@@ -102,13 +101,45 @@ FROM monitoring_sites_tbl WHERE location ILIKE '%aurn%' LIMIT 2;
 CREATE OR REPLACE TABLE no2_annual_tbl AS
 SELECT * FROM read_csv('data/from_datasette/_no2_diffusion_tube_data__202502281344.csv');
 
--- separate aurn table to include wind speed and direction 
-CREATE OR REPLACE TABLE aurn_tbl AS
-SELECT * EXCLUDE(source), CASE
+-- separate aurn table to include weather data
+-- sourced from aurn.R - as openair needed to source data
+CREATE OR REPLACE TABLE dim_aurn_tbl AS
+SELECT * EXCLUDE(FID, source),
+ST_Point(LONG, LAT) as geom,
+CASE
  WHEN code = 'BR11' THEN 500
  WHEN code = 'BRS8' THEN 452
- ELSE 0 END site_id
-FROM read_parquet('data/aurn_data.parquet');
+ ELSE NULL END site_id,
+FROM read_parquet('data/aurn_sites_in_ca.parquet');
 
+ALTER TABLE dim_aurn_tbl
+ADD PRIMARY KEY (code);
+
+CREATE OR REPLACE TABLE fact_aurn_tbl AS
+SELECT * FROM read_parquet('data/aurn_data_ca.parquet');
+
+CREATE TABLE fact_aurn_tbl(code VARCHAR REFERENCES dim_aurn_tbl(code),
+                         date TIMESTAMP WITH TIME ZONE,
+                         nox DOUBLE,
+                         no2 DOUBLE,
+                         "no" DOUBLE,
+                         o3 DOUBLE,
+                         so2 DOUBLE,
+                         ws DOUBLE,
+                         wd DOUBLE,
+                         air_temp DOUBLE,
+                         pm10 DOUBLE,
+                         "pm2.5" DOUBLE,
+                         v10 DOUBLE,
+                         "v2.5" DOUBLE,
+                         nv10 DOUBLE,
+                         "nv2.5" DOUBLE,
+                         co DOUBLE);
+
+INSERT INTO fact_aurn_tbl
+SELECT * FROM read_parquet('data/aurn_data_ca.parquet');
+
+.mode column
+.schema fact_aurn_tbl
 .tables
 .quit
