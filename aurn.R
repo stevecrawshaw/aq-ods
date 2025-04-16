@@ -21,11 +21,11 @@ aurn_ca_tbl |>
 
 aurn_ca_tbl |>
   select(-c(source, site)) |>
-  write_parquet( "data/aurn_data_ca.parquet")
+  write_parquet("data/aurn_data_ca.parquet")
 
 # geoparquet with sf arrow doesn't have version so duckdb import fails
 aurn_sites_in_ca_tbl |>
   select(-c(Shape__Length, Shape__Area, GlobalID)) |>
-  st_drop_geometry() |> 
+  st_drop_geometry() |>
     write_parquet("data/aurn_sites_in_ca.parquet")
 

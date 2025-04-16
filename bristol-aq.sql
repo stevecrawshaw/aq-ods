@@ -1,3 +1,8 @@
+nu
+http get 'https://maps.bristol.gov.uk/opendata/ContinuousAirQuality2018-2023.zip' | save data/ContinuousAirQuality.zip
+unzip data/ContinuousAirQuality.zip -d data/
+
+
 duckdb
 
 .mode duckbox
@@ -23,7 +28,6 @@ columns = {
 timestampformat = "%d/%m/%Y %H:%M:%S",
 ignore_errors = true); 
 
-
 CREATE OR REPLACE TABLE fact_aq_concs_tbl AS
 WITH d AS
 (SELECT *, CASE
@@ -44,8 +48,6 @@ END AS "time",
         PM2_5 "pm2.5",
         PM10 pm10
 FROM d;
-
-DESCRIBE aq_clean;
 
 CREATE OR REPLACE TABLE dim_aq_sites_tbl AS
 SELECT SITE_ID,

@@ -7,6 +7,8 @@ embed-resources: true
 preview-links: true
 format:
   revealjs:
+    revealjs-plugins:
+      - fullscreen
     theme: 
     - default
     - clean.scss
@@ -32,145 +34,66 @@ format:
 - Sources
 - History
 
-:::: {.columns}
+<!-- :::: {.columns} -->
 
-::: {.column width="50%"}
-![](plots/excel_anaes_1.png)
+<!-- ::: {.column width="50%"} -->
+<!-- ![](plots/excel_anaes_1.png) -->
+<!-- ::: -->
+
+<!-- ::: {.column width="50%"} -->
+<!-- ![](plots/excel_covid.png) -->
+<!-- ::: -->
+
+<!-- :::: -->
+
+## Pollutants {background-image="plots/weca_ppt_image_sized_3.png"}
+- Nitrogen oxides (NOx) - a group of gases that includes NO~2~ and nitric oxide (NO) - complex atmospheric chemistry creates.. 
+- Nitrogen dioxide (NO~2~) - an acidic gas that irritates the lungs
+- Particulate matter (PM~10~ and PM~2.5~) - tiny particles that can penetrate deep into the lungs
+- Ozone (O~3~) - a reactive gas that can cause respiratory problems
+- Volatile organic compounds (VOCs) - important ozone precursors
+
+## Sources of Air Pollution {background-image="plots/weca_ppt_image_sized_3.png"}
+![](plots/sources of air pollution.jpg)
+
+## Sources and Exposure (NOx) {background-image="plots/weca_ppt_image_sized_3.png"}
+![](plots/nox_roadside_source_appt.png){.r-stretch}
+::: {.notes}
+Roadside exposure to NO2 is much greater than a purely emissions based analysis would suggest.
 :::
 
-::: {.column width="50%"}
-![](plots/excel_covid.png)
-:::
 
-::::
+## Sources and Exposure (PM) {background-image="plots/weca_ppt_image_sized_3.png"}
 
+- Transport accounts for 21% of PM~2.5~ and 18% of PM~10~
+- 20% of PM~2.5~ emissions from domestic solid fuel
+  - i.e. where people live
+  - almost all discretionary emissions
+  - 36% increase in PM from this source 2009 - 2020
+  
+## Indoor pollution {background-image="plots/weca_ppt_image_sized_3.png"}
 
+- Indoor pollution is significant but less regulated than outdoor
+- Cooking (gas) - NO~2~
+- Heating (solid fuel) - PM~2.5~
+- Off - gassing (furniture, carpets, paint) - VOCs
+- Transport (and other) emissions ingress from outside
 
-## Excel `r emo::ji("sad")` {background-image="plots/weca_ppt_image_sized_3.png"}
-
-:::: {.columns}
-
-::: {.column width="50%"}
-![](plots/excel_brod.png)
-:::
-
-::: {.column width="50%"}
-![](plots/excel_reinhard_rogoff.png)
-:::
-
-::::
-
-## Code - first (Python & R) `r emo::ji("love")` {background-image="plots/weca_ppt_image_sized_3.png"}
-
-- Separate data and code
-- Code is reviewable
-- Style guides for good practice
-- Reusable code, modular and functional programming
-- Machine learning, prediction, forecasting
-- Integrated reporting functionality
-- Pre - requisite for RAP
-
-## Analysis task {background-image="plots/weca_ppt_image_sized_3.png"}
-
-- Report on last month's domestic EPC's for the West of England with a focus on heat pumps. Compare with previous year and show data in charts, maps and tables.
-
-## Typical non code workflow {background-image="plots/weca_ppt_image_sized_3.png"}
-
-:::: {.columns}
-
-::: {.column width="50%"}
-- Login to [EPC web site](https://epc.opendatacommunities.org/domestic/search)
-- Download multiple files as zip (or one 4.5GB file)
-- Assemble in excel
-- Wrangle, analyse, chart
-- Extract table data
-:::
-
-::: {.column width="50%"}
-- Join postcode and location data
-- Map in QGIS
-- Export map from QGIS as png
-- Insert data analysis products in Word report
-- Submit report
-:::
-
-::::
-
-[Expanded example](https://hkarlsen.rbind.io/blog/data-workflow/)
-
-## Analysis Feedback {background-image="plots/weca_ppt_image_sized_3.png"}
-
-*"Great, but can you add ... *
-
-*And can you do this every month.."*
-
-## Code - first workflow {background-image="plots/weca_ppt_image_sized_3.png"}
-
-
-- Write and test **functions** to:
-  - Download EPC data given dates, LA and endpoint from API
-  - Download location data for postcodes in EPC data
-  - Clean, wrangle, join data
-  - Chart, map, tabulate data
-
-- Call **functions** in literate programming environment combining code, visualisations and text
-
-## Demo {background-image="plots/weca_ppt_image_sized_3.png"}
-
-## Benefits {background-image="plots/weca_ppt_image_sized_3.png"}
-
-- Data separate from code (API)
-- Lower risk of tool - dependent errors
-- Reusable code - just change function parameters
-- Version control and collaboration with Git(Hub)
-- Literate programming data science environment (Quarto)
-  - Supports Python and R
-  - Attractive, integrated interactive reporting
-  - Dashboards, web apps, presentations
-  - Publish on [quarto.pub](https://stevecrawshaw.quarto.pub/)
-- Open source
-
-## Code first: {background-image="plots/weca_ppt_image_sized_3.png"}
-
-- "Code" is scary `r emo::ji("walking dead")` (but LLM's help a lot)
-- Python and \\ or R?
-- Investment & recruitment
-- Culture
-- Infrastructure
-  - ICT support
-  - Azure
-  - Data lake \\ warehouse \\ catalog
-
-## Towards Reproducible Analytics Pipelines {background-image="plots/weca_ppt_image_sized_3.png"}
-
-- Code first
-- Git and Github
-- Environment management
-- Pipeline tools (targets, ploomber)
-- Docker
-
-## RAP Guidance {background-image="plots/weca_ppt_image_sized_3.png"}
-
-:::: {.columns}
-
-::: {.column width="40%"}
-- [DESNZ](https://www.gov.uk/government/publications/desnz-standards-for-official-statistics/analysis-function-reproducible-analytical-pipelines-rap-strategy-2023-desnz-implementation-plan)
-- [UK Gov Data Science](https://ukgovdatascience.github.io/rap_companion/)
-- [OSR](https://osr.statisticsauthority.gov.uk/publication/reproducible-analytical-pipelines-overcoming-barriers-to-adoption/)
-- [Building RAPS with R](https://raps-with-r.dev/)
-:::
-
-::: {.column width="60%"}
-![](plots/raps_r.png)
-:::
-
-::::
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
 
 
 
-## [Civil Service RAP Strategy](https://analysisfunction.civilservice.gov.uk/policy-store/reproducible-analytical-pipelines-strategy/#short-summary-of-this-publication)  {background-image="plots/weca_ppt_image_sized_3.png"}
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
 
-**"Our analysis must be straightforward to reproduce. Reproducible analysis is more efficient, open, and easier to quality assure and re-use.**
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
 
-The most effective way to make analysis reproducible is to build analysis in code using best practice from software engineering. RAPs enable us to deliver **high quality, trustworthy research and analysis** using good programming practices. We meet user needs by writing efficient and re-usable code for analysis."
 
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
+
+
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
+
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}
+
+
+## placeholder {background-image="plots/weca_ppt_image_sized_3.png"}

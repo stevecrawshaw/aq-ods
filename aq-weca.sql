@@ -23,7 +23,9 @@ SHOW TABLES;
 SELECT table_name FROM information_schema.columns
 GROUP BY table_name, table_catalog, table_schema
 HAVING table_catalog = 'weca_postgres' AND table_schema = 'bcc';
+
 -- Boundaries of CAZ and AQMAs from various sources into the aq database
+
 CREATE OR REPLACE TABLE aq.bcc_caz AS
 SELECT * EXCLUDE(shape),
      ST_GeomFromWKB(weca_postgres.bcc.caz.shape).ST_Transform('EPSG:27700', 'EPSG:4326').ST_FlipCoordinates() AS geom
@@ -34,12 +36,14 @@ SELECT
      ST_GeomFromWKB(weca_postgres.banes.caz.shape).ST_Transform('EPSG:27700', 'EPSG:4326').ST_FlipCoordinates() AS geom
 FROM weca_postgres.banes.caz;
 
+-- make a single file containing both CAZ boundaries
 COPY(
 SELECT *, 'Bath and North East Somerset' ladnm, 'E06000022' ladcd, 'C' caz_class FROM aq.banes_caz
 UNION BY NAME
 SELECT geom, 'Bristol, City of' ladnm, 'E06000023' ladcd, 'D' caz_class FROM aq.bcc_caz)
 TO 'data/weca_caz.geojson' WITH (FORMAT GDAL, DRIVER 'GeoJSON');
 
+-- create a single table for all the AQMAs in the region
 CREATE OR REPLACE TABLE aq.weca_aqmas AS
 SELECT * REPLACE(ST_Transform(geom, 'EPSG:27700', 'EPSG:4326').ST_FlipCoordinates().ST_MakeValid() AS geom)
      FROM ST_read("data/AQMA_ShapeFile/All_pollutants.shp")
@@ -85,6 +89,8 @@ COPY background_grids_concs_vw TO
 'data/background_grids_condc.fgb'
 WITH (FORMAT GDAL, DRIVER 'FlatGeobuf');
 
+-- Data below are from the datasette air quality data for Bristol
+
 CREATE OR REPLACE TABLE no2_tube_concs_raw_tbl AS
 SELECT * FROM read_csv('data/from_datasette/_no2_tubes_raw__202502281345.csv');
 
@@ -101,6 +107,7 @@ FROM monitoring_sites_tbl WHERE location ILIKE '%aurn%' LIMIT 2;
 CREATE OR REPLACE TABLE no2_annual_tbl AS
 SELECT * FROM read_csv('data/from_datasette/_no2_diffusion_tube_data__202502281344.csv');
 
+-- AURN data for all combined authorities
 -- separate aurn table to include weather data
 -- sourced from aurn.R - as openair needed to source data
 CREATE OR REPLACE TABLE dim_aurn_tbl AS
@@ -139,7 +146,87 @@ CREATE TABLE fact_aurn_tbl(code VARCHAR REFERENCES dim_aurn_tbl(code),
 INSERT INTO fact_aurn_tbl
 SELECT * FROM read_parquet('data/aurn_data_ca.parquet');
 
-.mode column
-.schema fact_aurn_tbl
+-- Data from Bristol's "open data portal"
+-- These are continuous data from Bristol's sites from 1993 to 2023
+.quit
+nu
+http get 'https://maps.bristol.gov.uk/opendata/ContinuousAirQuality2018-2023.zip' | save data/ContinuousAirQuality.zip
+unzip data/ContinuousAirQuality.zip -d data/
+
+duckdb
+
+.mode duckbox
+CREATE OR REPLACE TABLE aq AS
+-- SELECT column_name, column_type from (DESCRIBE
+SELECT *,
+substring(DATE_TIME, 12, 2).regexp_matches('24') AS wrong,
+split_part(DATE_TIME, ' ', 1) AS date_str,
+split_part(DATE_TIME, ' ', 2).substring(1, 5) AS time_str
+FROM read_csv('data/ContinuousAirQuality.csv',
+columns = {
+    "SITE_ID": "BIGINT",
+    "LOCATION": "VARCHAR",
+    "EASTING": "BIGINT",
+    "NORTHING": "BIGINT",
+    "DATE_TIME": "VARCHAR",
+    "NO": "FLOAT",
+    "NOX": "FLOAT",
+    "NO2": "FLOAT",
+    "PM2_5": "FLOAT",
+    "PM10": "FLOAT"
+},
+timestampformat = "%d/%m/%Y %H:%M:%S",
+ignore_errors = true); 
+
+CREATE OR REPLACE TABLE dim_aq_contin_sites_bristol_tbl AS
+SELECT SITE_ID site_id,
+       "LOCATION" "location",
+       EASTING easting,
+       NORTHING northing,
+       ST_Point(easting, northing).ST_Transform('EPSG:27700', 'EPSG:4326') as geom,
+       '{' || geom.ST_X()::VARCHAR || ', ' || geom.ST_Y()::VARCHAR || '}' AS geo_point_2d
+FROM  aq
+GROUP BY ALL;
+
+ALTER TABLE dim_aq_contin_sites_bristol_tbl
+ADD PRIMARY KEY (site_id);
+
+CREATE OR REPLACE TABLE fact_aq_contin_concs_bristol_tbl(site_id BIGINT 
+                                                  REFERENCES dim_aq_contin_sites_bristol_tbl(site_id)
+                                                  NOT NULL,
+                                             datetime TIMESTAMP,
+                                             "no" FLOAT,
+                                             nox FLOAT,
+                                             no2 FLOAT,
+                                             "pm2.5" FLOAT,
+                                             pm10 FLOAT);
+
+--CREATE OR REPLACE TABLE fact_aq_contin_concs_bristol_tbl AS
+INSERT INTO fact_aq_contin_concs_bristol_tbl
+WITH d AS
+(SELECT *, CASE
+    WHEN wrong THEN CAST((strptime(date_str, '%d/%m/%Y') + INTERVAL 1 DAY) AS DATE)
+    ELSE CAST(strptime(date_str, '%d/%m/%Y') AS DATE)
+END AS "date",
+CASE
+    WHEN wrong THEN CAST('00:00' AS TIME)
+    ELSE CAST(strptime(time_str, '%H:%M') AS TIME)
+END AS "time",
+"date"::DATE + "time"::time AS "datetime"
+ FROM aq)
+ SELECT SITE_ID site_id,
+        datetime,
+        NO "no",
+        NOX nox,
+        NO2 no2,
+        PM2_5 "pm2.5",
+        PM10 pm10
+FROM d;
+
+DROP TABLE aq;
+
+COPY fact_aq_contin_concs_bristol_tbl TO 'data/fact_aq_contin_concs_bristol_tbl.parquet' (FORMAT PARQUET);
+COPY dim_aq_contin_sites_bristol_tbl TO 'data/dim_aq_contin_sites_bristol_tbl.parquet' (FORMAT PARQUET);
+
 .tables
 .quit
