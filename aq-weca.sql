@@ -257,5 +257,8 @@ SELECT name table_name,
        unnest(column_types) col_types
        from (SHOW ALL TABLES) WHERE database = 'air_quality';
 
+.shell git add . && git commit -m 'export motherduck'
+.shell git push origin main
+
 .tables
 .quit
