@@ -122,10 +122,12 @@ FROM read_parquet('data/aurn_sites_in_ca.parquet');
 ALTER TABLE dim_aurn_tbl
 ADD PRIMARY KEY (code);
 
-CREATE OR REPLACE TABLE fact_aurn_tbl AS
-SELECT * FROM read_parquet('data/aurn_data_ca.parquet');
+-- CREATE OR REPLACE TABLE fact_aurn_tbl AS
+-- SELECT * FROM read_parquet('data/aurn_data_ca.parquet');
 
-CREATE TABLE fact_aurn_tbl(code VARCHAR REFERENCES dim_aurn_tbl(code),
+DROP TABLE IF EXISTS fact_aurn_tbl;
+
+CREATE OR REPLACE TABLE fact_aurn_tbl(code VARCHAR,
                          date TIMESTAMP WITH TIME ZONE,
                          nox DOUBLE,
                          no2 DOUBLE,
@@ -191,9 +193,7 @@ GROUP BY ALL;
 ALTER TABLE dim_aq_contin_sites_bristol_tbl
 ADD PRIMARY KEY (site_id);
 
-CREATE OR REPLACE TABLE fact_aq_contin_concs_bristol_tbl(site_id BIGINT 
-                                                  REFERENCES dim_aq_contin_sites_bristol_tbl(site_id)
-                                                  NOT NULL,
+CREATE OR REPLACE TABLE fact_aq_contin_concs_bristol_tbl(site_id BIGINT,
                                              datetime TIMESTAMP,
                                              "no" FLOAT,
                                              nox FLOAT,
@@ -223,10 +223,39 @@ END AS "time",
         PM10 pm10
 FROM d;
 
+
+-- SELECT * 
+-- FROM fact_aq_contin_concs_bristol_tbl f
+-- INNER JOIN dim_aq_contin_sites_bristol_tbl d
+-- USING (site_id);
+-- WHERE f.site_id = 188 AND f.datetime BETWEEN date'1996-01-01' AND date'1997-01-01';
+
+
 DROP TABLE aq;
 
 COPY fact_aq_contin_concs_bristol_tbl TO 'data/fact_aq_contin_concs_bristol_tbl.parquet' (FORMAT PARQUET);
 COPY dim_aq_contin_sites_bristol_tbl TO 'data/dim_aq_contin_sites_bristol_tbl.parquet' (FORMAT PARQUET);
+
+FROM aq.dim_aq_contin_sites_bristol_tbl;
+SELECT DISTINCT site_id FROM aq.fact_aq_contin_concs_bristol_tbl;
+
+
+ATTACH 'md:';
+-- md authentication is in environment variables printenv
+
+SHOW DATABASES;
+
+CREATE OR REPLACE DATABASE air_quality FROM aq;
+
+SHOW ALL TABLES;
+
+USE air_quality;
+.mode duckbox
+
+SELECT name table_name,
+       unnest(column_names) col_names,
+       unnest(column_types) col_types
+       from (SHOW ALL TABLES) WHERE database = 'air_quality';
 
 .tables
 .quit

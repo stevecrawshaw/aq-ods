@@ -5,13 +5,12 @@ author: "Steve Crawshaw"
 institute: "Analysis Team"
 embed-resources: true
 preview-links: true
+brand: ../_brand.yml
 format:
   revealjs:
-    revealjs-plugins:
-      - fullscreen
     theme: 
     - default
-    - clean.scss
+    # - clean.scss - this file conflicts with brand.yml
 ---
 
 
