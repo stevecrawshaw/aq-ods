@@ -241,7 +241,7 @@ SELECT DISTINCT site_id FROM aq.fact_aq_contin_concs_bristol_tbl;
 
 
 ATTACH 'md:';
--- md authentication is in environment variables printenv
+-- md authentication is in user environment variables
 
 SHOW DATABASES;
 
