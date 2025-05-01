@@ -95,7 +95,7 @@ CREATE OR REPLACE TABLE no2_tube_concs_raw_tbl AS
 SELECT * FROM read_csv('data/from_datasette/_no2_tubes_raw__202502281345.csv');
 
 CREATE OR REPLACE TABLE continuous_tbl AS
-SELECT date_time, nox, no, no2, pm10, pm25, o3, temp, press, rh
+SELECT site_id, date_time, nox, no, no2, pm10, pm25, o3, temp, press, rh
 FROM read_csv('data/from_datasette/_air_quality_data_continuous__202502281343.csv');
 
 CREATE OR REPLACE TABLE monitoring_sites_tbl AS
@@ -252,12 +252,34 @@ SHOW ALL TABLES;
 USE air_quality;
 .mode duckbox
 
-SELECT name table_name,
-       unnest(column_names) col_names,
-       unnest(column_types) col_types
-       from (SHOW ALL TABLES) WHERE database = 'air_quality';
 
-.shell git add . && git commit -m 'export motherduck'
+CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
+       WITH schema_tbl AS
+       (SELECT name,
+       unnest(column_names) column_name,
+       unnest(column_types) "type"
+       FROM (SHOW ALL TABLES) )
+       SELECT * EXCLUDE(name) FROM schema_tbl
+       INNER JOIN 
+       (UNPIVOT
+        (SELECT list(COLUMNS(*)::VARCHAR) 
+            FROM query_table(table_name) LIMIT 5)
+        ON COLUMNS(*)
+        INTO NAME column_name
+        VALUE sample_data) as sample_tbl
+        USING (column_name)
+        WHERE schema_tbl.name = table_name;
+
+FROM glimpse('weca_aqmas');
+
+ATTACH 'md:macros';
+
+SHOW TABLES;
+
+FROM macros.glimpse('weca_aqmas');
+
+
+.shell git add . && git commit -m 'macro'
 .shell git push origin main
 
 .tables
