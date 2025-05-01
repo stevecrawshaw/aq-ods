@@ -13,11 +13,10 @@ LOAD HTTPFS;
 -- credentials are stored in a secret manager
 -- We retrieve the background grids and transform to enable joining and mapping
 
-ATTACH '' AS weca_postgres (TYPE POSTGRES, SECRET weca_postgres);
-
 ATTACH 'data/aq.duckdb' AS aq;
 USE aq;
 
+ATTACH '' AS weca_postgres (TYPE POSTGRES, SECRET weca_postgres);
 SHOW TABLES;
 
 SELECT table_name FROM information_schema.columns
@@ -240,7 +239,6 @@ FROM aq.dim_aq_contin_sites_bristol_tbl;
 SELECT DISTINCT site_id FROM aq.fact_aq_contin_concs_bristol_tbl;
 
 
-ATTACH 'md:';
 -- md authentication is in user environment variables
 
 SHOW DATABASES;
@@ -249,12 +247,15 @@ CREATE OR REPLACE DATABASE air_quality FROM aq;
 
 SHOW ALL TABLES;
 
+ATTACH 'md:air_quality';
 USE air_quality;
 .mode duckbox
 
 
 CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
-       WITH schema_tbl AS
+SELECT * REPLACE(regexp_replace(sample_data::VARCHAR, '\[|\]', '', 'g') AS sample_data)
+FROM
+       (WITH schema_tbl AS
        (SELECT name,
        unnest(column_names) column_name,
        unnest(column_types) "type"
@@ -262,24 +263,32 @@ CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
        SELECT * EXCLUDE(name) FROM schema_tbl
        INNER JOIN 
        (UNPIVOT
-        (SELECT list(COLUMNS(*)::VARCHAR) 
-            FROM query_table(table_name) LIMIT 5)
+        (SELECT list(COLUMNS(*)::VARCHAR)
+            FROM 
+            (SELECT * FROM query_table(table_name)
+             LIMIT 5))
         ON COLUMNS(*)
         INTO NAME column_name
         VALUE sample_data) as sample_tbl
         USING (column_name)
-        WHERE schema_tbl.name = table_name;
+        WHERE schema_tbl.name = table_name);
+------------------------------------------------------
 
-FROM glimpse('weca_aqmas');
+SELECT * FROM glimpse('dim_aurn_tbl');
+
 
 ATTACH 'md:macros';
+USE macros;
+
+FROM duckdb_functions() WHERE database_name = 'macros' AND function_name = 'glimpse';
+
 
 SHOW TABLES;
 
 FROM macros.glimpse('weca_aqmas');
 
 
-.shell git add . && git commit -m 'macro'
+.shell git add . && git commit -m 'macro refine'
 .shell git push origin main
 
 .tables
