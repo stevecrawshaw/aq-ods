@@ -247,11 +247,21 @@ CREATE OR REPLACE DATABASE air_quality FROM aq;
 
 SHOW ALL TABLES;
 
+ATTACH '../m.duckdb' AS m;
+USE m;
 ATTACH 'md:air_quality';
+DETACH air_quality;
 USE air_quality;
 .mode duckbox
 
 
+DESCRIBE no2_tube_concs_raw_tbl;
+
+FROM m.main.glimpse('no2_tube_concs_raw_tbl');
+
+-- saved in a duckdb file ../m.duckdb
+-- attach and use m.duckdb.
+-- call function with FROM m.glimpse('table_name');
 CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
 SELECT * REPLACE(regexp_replace(sample_data::VARCHAR, '\[|\]', '', 'g') AS sample_data)
 FROM
@@ -272,13 +282,48 @@ FROM
         VALUE sample_data) as sample_tbl
         USING (column_name)
         WHERE schema_tbl.name = table_name);
+
 ------------------------------------------------------
 
-SELECT * FROM glimpse('dim_aurn_tbl');
+-- GEMINI VERSION
+
+CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
+WITH TableSchema AS (
+    
+    SELECT
+        cid,  
+        name AS column_name,
+        type AS column_type
+    FROM pragma_table_info(table_name)
+),
+SampleData AS (
+    -- Select the first 5 rows from the target table
+    SELECT *
+    FROM query_table(table_name)
+    LIMIT 5
+),
+SampleDataUnpivoted AS (
+    -- Unpivot the sample data: columns become rows
+    UNPIVOT (SELECT list(COLUMNS(*)::VARCHAR) FROM SampleData)
+    ON COLUMNS(*)
+    INTO
+        NAME column_name
+        VALUE sample_values_list -- This will be a list of strings
+)
+-- Final selection joining schema info with sample data
+SELECT
+    ts.column_name,
+    ts.column_type,
+    -- Convert the list to string and remove brackets for cleaner display
+    regexp_replace(usp.sample_values_list::VARCHAR, '^\[|\]$', '', 'g') AS sample_data
+FROM TableSchema ts
+JOIN SampleDataUnpivoted usp ON ts.column_name = usp.column_name
+ORDER BY ts.cid; 
 
 
-ATTACH 'md:macros';
-USE macros;
+CREATE OR REPLACE TABLE test_tbl AS SELECT * FROM read_csv('data/banes_aq_concs.csv');
+
+FROM glimpse('test_tbl');
 
 FROM duckdb_functions() WHERE database_name = 'macros' AND function_name = 'glimpse';
 
@@ -288,7 +333,7 @@ SHOW TABLES;
 FROM macros.glimpse('weca_aqmas');
 
 
-.shell git add . && git commit -m 'macro refine'
+.shell git add . && git commit -m 'macro gemini'
 .shell git push origin main
 
 .tables
