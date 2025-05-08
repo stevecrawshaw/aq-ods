@@ -223,13 +223,6 @@ END AS "time",
 FROM d;
 
 
--- SELECT * 
--- FROM fact_aq_contin_concs_bristol_tbl f
--- INNER JOIN dim_aq_contin_sites_bristol_tbl d
--- USING (site_id);
--- WHERE f.site_id = 188 AND f.datetime BETWEEN date'1996-01-01' AND date'1997-01-01';
-
-
 DROP TABLE aq;
 
 COPY fact_aq_contin_concs_bristol_tbl TO 'data/fact_aq_contin_concs_bristol_tbl.parquet' (FORMAT PARQUET);
@@ -241,99 +234,23 @@ SELECT DISTINCT site_id FROM aq.fact_aq_contin_concs_bristol_tbl;
 
 -- md authentication is in user environment variables
 
-SHOW DATABASES;
+-- Load the data from ODS for all authorities in WECA
+CREATE OR REPLACE TABLE aq.air_quality_measurements_ods_tbl AS
+SELECT * FROM read_parquet('https://opendata.westofengland-ca.gov.uk/api/explore/v2.1/catalog/datasets/air-quality-measurements/exports/parquet');
 
+CREATE OR REPLACE TABLE aq.air_quality_monitoring_sites_ods_tbl AS
+FROM read_parquet('https://opendata.westofengland-ca.gov.uk/api/explore/v2.1/catalog/datasets/air-quality-monitoring-sites/exports/parquet');
+
+
+ATTACH 'md:air_quality';
+USE air_quality;
 CREATE OR REPLACE DATABASE air_quality FROM aq;
 
-SHOW ALL TABLES;
-
-ATTACH '../m.duckdb' AS m;
-USE m;
-ATTACH 'md:air_quality';
-DETACH air_quality;
-USE air_quality;
-.mode duckbox
-
-
-DESCRIBE no2_tube_concs_raw_tbl;
-
-FROM m.main.glimpse('no2_tube_concs_raw_tbl');
-
--- saved in a duckdb file ../m.duckdb
--- attach and use m.duckdb.
--- call function with FROM m.glimpse('table_name');
-CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
-SELECT * REPLACE(regexp_replace(sample_data::VARCHAR, '\[|\]', '', 'g') AS sample_data)
-FROM
-       (WITH schema_tbl AS
-       (SELECT name,
-       unnest(column_names) column_name,
-       unnest(column_types) "type"
-       FROM (SHOW ALL TABLES) )
-       SELECT * EXCLUDE(name) FROM schema_tbl
-       INNER JOIN 
-       (UNPIVOT
-        (SELECT list(COLUMNS(*)::VARCHAR)
-            FROM 
-            (SELECT * FROM query_table(table_name)
-             LIMIT 5))
-        ON COLUMNS(*)
-        INTO NAME column_name
-        VALUE sample_data) as sample_tbl
-        USING (column_name)
-        WHERE schema_tbl.name = table_name);
-
-------------------------------------------------------
-
--- GEMINI VERSION
-
-CREATE OR REPLACE MACRO glimpse(table_name) AS TABLE
-WITH TableSchema AS (
-    
-    SELECT
-        cid,  
-        name AS column_name,
-        type AS column_type
-    FROM pragma_table_info(table_name)
-),
-SampleData AS (
-    -- Select the first 5 rows from the target table
-    SELECT *
-    FROM query_table(table_name)
-    LIMIT 5
-),
-SampleDataUnpivoted AS (
-    -- Unpivot the sample data: columns become rows
-    UNPIVOT (SELECT list(COLUMNS(*)::VARCHAR) FROM SampleData)
-    ON COLUMNS(*)
-    INTO
-        NAME column_name
-        VALUE sample_values_list -- This will be a list of strings
-)
--- Final selection joining schema info with sample data
-SELECT
-    ts.column_name,
-    ts.column_type,
-    -- Convert the list to string and remove brackets for cleaner display
-    regexp_replace(usp.sample_values_list::VARCHAR, '^\[|\]$', '', 'g') AS sample_data
-FROM TableSchema ts
-JOIN SampleDataUnpivoted usp ON ts.column_name = usp.column_name
-ORDER BY ts.cid; 
-
-
-CREATE OR REPLACE TABLE test_tbl AS SELECT * FROM read_csv('data/banes_aq_concs.csv');
-
-FROM glimpse('test_tbl');
-
-FROM duckdb_functions() WHERE database_name = 'macros' AND function_name = 'glimpse';
-
-
 SHOW TABLES;
+DETACH air_quality;
 
-FROM macros.glimpse('weca_aqmas');
 
-
-.shell git add . && git commit -m 'macro gemini'
+.shell git add . && git commit -m 'ingest ods data'
 .shell git push origin main
 
 .tables
