@@ -18,7 +18,7 @@ source("aq-processing-functions.r")
 #
 get_raw_dt_la_lst <- function(la_list) {
   # function to retrieve the diffusion tube raw data from the DT spreadsheet
-  la_name <- pluck(la_list, "la_name")
+  la_name <- purrr::pluck(la_list, "la_name")
   dt_path <- pluck(la_list, "dt_path")
   ladcd <- pluck(la_list, "ladcd")
 
