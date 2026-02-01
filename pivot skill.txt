@@ -1,0 +1,19 @@
+
+**Pivot with DuckDB:**
+
+```sql
+PIVOT source_table
+ON metric              -- Column with series names
+USING sum(value)       -- Aggregation
+GROUP BY month;        -- Grouping column
+```
+
+**Export pivoted data:**
+
+```sql
+COPY (
+    PIVOT data ON metric USING sum(value) GROUP BY month
+) TO 'output.json' (FORMAT JSON, ARRAY true);
+```
+
+See SKILL.md "Data Format: Wide vs Long (Pivoting)" section for complete documentation, detection guidelines, and advanced examples.
